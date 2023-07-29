@@ -1,0 +1,9 @@
+.coluna {
+    width: 10vh;
+    height: 10vh;
+    border: 1px solid black;
+}
+
+.linha {
+    display: flex;
+}
