@@ -1,45 +1,138 @@
-const jogadasPossiveis = ['X', 'O'];
-let jogadaAtual = 'X';
-const colunas = Array.from(document.getElementsByClassName('coluna'));
+let playerTurn = 'X';
+let winner = null;
 
-const mudarJogada = (jogadaAtual) => {
-    jogadaAtual = jogadaAtual === 'X' ? 'O' : 'X';
-    return jogadaAtual;
+const collumns = Array.from(document.getElementsByClassName('collumn'));
+/**
+ * Troca de turno
+ * @param {String} playerTurn 
+ * @returns {String}
+ */
+const switchTurn = (playerTurn) => {
+    playerTurn = playerTurn === 'X' ? 'O' : 'X';
+    return playerTurn;
 }
+/**
+ * Verifica se algum dos jogadores venceu
+ * @returns {Boolean}
+ */
+const checkWin = () => {
+    const columnsThatWin = '123,456,789,159,357,147,258,369'.split(',');
+    const result = validateColumns(columnsThatWin);
+    return (result);
+}
+/**
+ * Verifica se todos os elementos de um array são iguais
+ * @param {Array} array
+ * @returns {Boolean}
+ */
+const checkElementsEquals = (array) => {
+    if (array.length === 3) {
+        const firstElement = array[0];
 
-// const jogo = () => {
-colunas.forEach(coluna => {
-    coluna.addEventListener('click', function () {
-        
-        if (!coluna.classList.contains('jogado')) {
-            coluna.classList.add('jogado', jogadaAtual);
-            coluna.innerText = jogadaAtual;        
-            jogadaAtual = mudarJogada(jogadaAtual);
+        for (let i = 1; i < array.length; i++) {
+            if (array[i] !== firstElement) {
+                return false;
+            }
         }
-    })
-});
-// }
-
-// document.getElementById('tabuleiro');
-
-const verificarSeFezPonto = (jogada) => {
-    const colunas = Array.from(document.getElementsByClassName('jogado'));
-    const primeiraLinha = [1, 2, 3];
-
+        return true;
+    }
+    return false;
+}
+/**
+ * Reseta todas as colunas que estavam preenchidas
+ */
+const resetGame = () => {
+    winner = null;
+    const columnsFilled = Array.from(document.getElementsByClassName('filled'));
+    columnsFilled.forEach(columnFilled => {
+        columnFilled.classList.remove('filled');
+        columnFilled.innerText = '';
+    });
 
 }
 /**
- * @param {Array} listaDeNumeros - rer
+ * Valida uma lista de jogadas para saber se há uma combinação que venceu
+ * @param {Array<String>} columnsThatWin 
+ * @returns {Boolean}
  */
-const teste = (listaDeNumeros) => {
-    const lista = [];
-    listaDeNumeros.forEach(numero => {
-        const coluna = document.getElementById(String(numero));
-        const texto = coluna.innerText;
-        if (texto != '') {
-            lista.push(texto);
+const validateColumns = (columnsThatWin) => {
+    for (let index = 0; index < columnsThatWin.length; index++) {
+        const positionColumns = columnsThatWin[index];
+        const checker = [];
+        const listPositionColumns = positionColumns.split('');
+
+        listPositionColumns.forEach(positionColumn => {
+            const collumn = document.getElementById(`c${positionColumn}`);
+            if (collumn != null) {
+                if (collumn.classList.contains('filled')) {
+                    checker.push(collumn.innerText);
+                }
+            }
+        });
+        const itWon = checkElementsEquals(checker);
+        if (itWon) {
+            winner = checker[0];
+            return itWon;
         }
-    })
-    const verificacao = lista[0] === lista[1] && lista[1] === lista[2];
-    return verificacao;
+    }
+    return false;
 }
+/**
+ * Preenche as colunas
+ * @param {Element} collumn
+ */
+const fillColumn = (collumn) => {
+    if (collumn.classList.contains('filled')) {
+        return;
+    }
+
+    collumn.classList.add('filled', playerTurn);
+    collumn.innerText = playerTurn;
+
+    playerTurn = switchTurn(playerTurn);
+
+    analyzeTurn();
+
+}
+/**
+ * Analisa cada turno
+ */
+const analyzeTurn = () => {
+    const haveWinner = checkWin();
+    const quantityColumnsFilled = Array.from(document.getElementsByClassName('filled')).length
+
+    if (haveWinner) {
+        setTimeout(() => { alert(`The player (${winner}) won`) }, 0);
+        setTimeout(resetGame, 700);
+    } else if (quantityColumnsFilled === 9) {
+        setTimeout(() => { alert('GameOver'); }, 700);
+        setTimeout(resetGame, 700);
+    }
+}
+/**
+ * Torna o tabuleiro responsível
+ */
+const resizeBoard = () => {
+    const widthWindow = window.innerWidth;
+    const heithWindow = window.innerHeight;
+
+    const sizeUnit = widthWindow < heithWindow ? 'vw' : 'vh';
+
+    collumns.forEach(collumn => {
+        collumn.style.width = `25${sizeUnit}`;
+        collumn.style.height = `25${sizeUnit}`;
+        collumn.style.fontSize = `15${sizeUnit}`;
+    });
+
+}
+
+// Chama a função quando a página for carregada
+window.addEventListener('load', resizeBoard);
+
+// Chama a função novamente quando a janela for redimensionada
+window.addEventListener('resize', resizeBoard);
+
+// Adiciona o evento de click em cada coluna
+collumns.forEach(collumn => {
+    collumn.addEventListener('click', () => { fillColumn(collumn) });
+});
